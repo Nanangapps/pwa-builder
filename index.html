@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PWA Builder Ultimate</title>
+  
+  <!-- ========================================== -->
+  <!-- KODE PWA BARU (Ditambahkan di sini)        -->
+  <!-- ========================================== -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="theme-color" content="#6366f1">
+  
+  <!-- iOS Support (Agar bisa di-install di iPhone/iPad) -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="PWA Builder">
+  <link rel="apple-touch-icon" href="./icon.png">
+  <!-- ========================================== -->
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-50 dark:bg-slate-900 text-gray-900 dark:text-white min-h-screen pb-20">
+
+  <!-- Header -->
+  <header class="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50">
+    <div class="max-w-2xl mx-auto px-4 py-3 flex justify-between items-center">
+      <h1 class="text-lg font-bold bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent">🚀 PWA Ultimate</h1>
+      <div class="flex gap-2">
+        <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700">🌙</button>
+        <button onclick="exportProject()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-sm">💾</button>
+        <label class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 text-sm cursor-pointer">
+          📂 <input type="file" id="importFile" accept=".json" class="hidden" onchange="importProject(event)">
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <!-- Progress Bar Wizard -->
+  <div class="max-w-2xl mx-auto px-4 pt-4">
+    <div class="flex justify-between mb-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+      <span id="step1-indicator" class="text-indigo-600 dark:text-indigo-400">1. URL</span>
+      <span id="step2-indicator">2. Desain</span>
+      <span id="step3-indicator">3. Lanjutan</span>
+      <span id="step4-indicator">4. Export</span>
+    </div>
+    <div class="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-1.5">
+      <div id="progressBar" class="bg-indigo-600 h-1.5 rounded-full transition-all duration-500" style="width: 25%"></div>
+    </div>
+  </div>
+
+  <main class="max-w-2xl mx-auto px-4 py-6">
+    
+    <!-- STEP 1: URL & ANALISIS -->
+    <section id="step1" class="wizard-step bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold mb-4">🔗 Masukkan URL Website</h2>
+      <div class="flex gap-2 mb-4">
+        <input id="urlInput" type="url" placeholder="https://example.com" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        <button onclick="analyzeUrl()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold">Cek</button>
+      </div>
+      <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg text-sm text-blue-700 dark:text-blue-300">
+        💡 Tips: Pastikan website menggunakan HTTPS agar PWA bisa di-install.
+      </div>
+    </section>
+
+    <!-- STEP 2: DESAIN & MOCKUP -->
+    <section id="step2" class="wizard-step hidden bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold mb-4">🎨 Desain Aplikasi</h2>
+      
+      <!-- Phone Mockup Preview -->
+      <div class="flex justify-center mb-6">
+        <div class="phone-mockup">
+          <div class="phone-screen" id="mockupScreen">
+            <div class="mockup-header" id="mockupHeader">
+              <div class="mockup-icon" id="mockupIcon"></div>
+              <h3 class="mockup-title" id="mockupTitle">App Name</h3>
+            </div>
+            <div class="mockup-content">
+              <p class="text-gray-500 dark:text-gray-400 text-xs text-center mt-4">Konten Website Anda</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-medium">Nama Aplikasi</label>
+          <input id="titleInput" class="w-full mt-1 px-4 py-2 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg" oninput="updateMockup()">
+        </div>
+        <div>
+          <label class="text-sm font-medium">Upload Ikon (Otomatis Resize & AI Color)</label>
+          <input type="file" id="iconUpload" accept="image/*" class="w-full mt-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" onchange="handleIconUpload(event)">
+          <input type="hidden" id="iconInput">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm font-medium">Warna Tema (AI)</label>
+            <input id="colorInput" type="color" class="w-full h-10 mt-1 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg cursor-pointer" oninput="updateMockup()">
+          </div>
+          <div>
+            <label class="text-sm font-medium">Background</label>
+            <input id="bgInput" type="color" class="w-full h-10 mt-1 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg cursor-pointer" oninput="updateMockup()">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 3: FITUR LANJUTAN -->
+    <section id="step3" class="wizard-step hidden bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold mb-4">⚙️ Fitur Lanjutan</h2>
+      
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm font-medium">Mode Tampilan</label>
+          <select id="displayInput" class="w-full mt-1 px-4 py-2 bg-gray-100 dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg">
+            <option value="standalone">Standalone (Seperti Aplikasi Native)</option>
+            <option value="fullscreen">Fullscreen (Tanpa Status Bar)</option>
+            <option value="minimal-ui">Minimal UI</option>
+            <option value="browser">Browser Default</option>
+          </select>
+        </div>
+
+        <!-- App Shortcuts -->
+        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl">
+          <label class="flex items-center gap-2 font-medium mb-2">
+            <input type="checkbox" id="enableShortcuts" class="w-4 h-4 text-indigo-600 rounded" onchange="toggleShortcuts()">
+            Aktifkan App Shortcuts (Menu Tahan Ikon)
+          </label>
+          <div id="shortcutsContainer" class="hidden space-y-2 mt-2">
+            <input id="shortcutName1" placeholder="Nama Shortcut 1 (cth: Chat Baru)" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm">
+            <input id="shortcutUrl1" placeholder="URL Shortcut 1 (cth: /new-chat)" class="w-full px-3 py-2 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-sm">
+          </div>
+        </div>
+
+        <!-- Share Target -->
+        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl">
+          <label class="flex items-center gap-2 font-medium">
+            <input type="checkbox" id="enableShare" class="w-4 h-4 text-indigo-600 rounded">
+            Aktifkan Web Share Target (Bisa Terima Share dari App Lain)
+          </label>
+        </div>
+
+        <!-- Offline Page -->
+        <div class="bg-gray-50 dark:bg-slate-900 p-4 rounded-xl">
+          <label class="flex items-center gap-2 font-medium">
+            <input type="checkbox" id="enableOffline" checked class="w-4 h-4 text-indigo-600 rounded">
+            Generate Halaman Offline Kustom
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 4: EXPORT -->
+    <section id="step4" class="wizard-step hidden bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-sm border border-gray-200 dark:border-slate-700">
+      <h2 class="text-xl font-bold mb-4">🚀 Export & Download</h2>
+      
+      <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-xl mb-4 text-sm text-green-700 dark:text-green-300">
+        ✅ PWA Anda siap! Paket ini berisi: Manifest, Service Worker, Ikon (5 ukuran), Halaman Offline, dan Snippet iOS.
+      </div>
+
+      <button onclick="generateUltimateZip()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-4 rounded-xl font-bold text-lg shadow-lg transition transform hover:scale-[1.02] flex justify-center items-center gap-2">
+        📦 Download Paket PWA (ZIP)
+      </button>
+
+      <button onclick="copyUltimateSnippet()" class="w-full mt-3 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-900 dark:text-white py-3 rounded-xl font-semibold transition flex justify-center items-center gap-2">
+        📋 Copy Snippet HTML (Termasuk iOS)
+      </button>
+    </section>
+
+  </main>
+
+  <!-- Wizard Navigation Buttons -->
+  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 p-4 z-40">
+    <div class="max-w-2xl mx-auto flex justify-between gap-3">
+      <button id="btnPrev" onclick="changeStep(-1)" class="flex-1 bg-gray-200 dark:bg-slate-700 text-gray-900 dark:text-white py-3 rounded-xl font-semibold disabled:opacity-50" disabled>Kembali</button>
+      <button id="btnNext" onclick="changeStep(1)" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold">Lanjut</button>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 shadow-xl max-w-sm w-full text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4"></div>
+      <p class="text-gray-600 dark:text-gray-300 font-medium" id="loadingText">Memproses...</p>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- KODE SERVICE WORKER BARU (Ditambahkan di sini) -->
+  <!-- ========================================== -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(registration => {
+            console.log('SW registered: ', registration);
+          })
+          .catch(registrationError => {
+            console.log('SW registration failed: ', registrationError);
+          });
+      });
+    }
+  </script>
+  <!-- ========================================== -->
+
+  <script src="app.js"></script>
+</body>
+</html>

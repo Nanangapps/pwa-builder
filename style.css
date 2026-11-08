@@ -1,0 +1,167 @@
+/* Base Mobile-First Styling */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animasi */
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin { animation: spin 1s linear infinite; }
+
+/* Phone Mockup - Lebih Besar */
+.phone-mockup {
+  width: 260px;
+  height: 520px;
+  background: #111;
+  border-radius: 40px;
+  padding: 14px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.3), inset 0 0 0 2px #333;
+  position: relative;
+}
+.phone-mockup::before {
+  content: '';
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 24px;
+  background: #111;
+  border-radius: 12px;
+  z-index: 10;
+}
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: #fff;
+  border-radius: 30px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.mockup-header {
+  padding: 50px 18px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: background 0.3s;
+}
+.mockup-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  background-color: #ddd;
+  flex-shrink: 0;
+}
+.mockup-title {
+  font-weight: bold;
+  font-size: 16px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+.mockup-content {
+  flex: 1;
+  background: white;
+  padding: 18px;
+}
+
+/* Form Elements - Touch Friendly */
+input[type="text"],
+input[type="url"],
+input[type="email"],
+select,
+textarea {
+  font-size: 16px !important; /* Mencegah zoom di iOS */
+  min-height: 48px;
+  padding: 12px 16px !important;
+}
+
+input[type="color"] {
+  -webkit-appearance: none;
+  border: none;
+  padding: 4px;
+  min-height: 48px;
+  width: 100%;
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 0.5rem; }
+
+/* Buttons - Touch Friendly */
+button {
+  min-height: 48px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Card Spacing */
+.wizard-step {
+  padding: 24px !important;
+  margin-bottom: 20px;
+}
+
+.wizard-step h2 {
+  font-size: 20px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Label & Input Spacing */
+label {
+  font-size: 15px !important;
+  font-weight: 600;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Smooth transitions */
+* { transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
+input:focus, select:focus { outline: none; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3); }
+
+/* Dark Mode - Fixed */
+.dark body {
+  background-color: #0f172a !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .wizard-step,
+.dark header,
+.dark .phone-screen {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #334155 !important;
+  color: #f1f5f9 !important;
+  border-color: #475569 !important;
+}
+
+.dark .bg-gray-50,
+.dark .bg-blue-50,
+.dark .bg-green-50 {
+  background-color: #0f172a !important;
+}
+
+.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-600,
+.dark .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .border-gray-200,
+.dark .border-gray-300 {
+  border-color: #475569 !important;
+}
