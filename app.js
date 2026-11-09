@@ -591,3 +591,49 @@ if (!document.getElementById('toast-style')) {
   `;
   document.head.appendChild(style);
 }
+// Fungsi untuk handle tombol Next/Selesai
+function handleNextButton() {
+  if (currentStep === totalSteps) {
+    resetToStart();
+  } else {
+    changeStep(1);
+  }
+}
+
+// Fungsi Reset ke Awal (PASTI BERFUNGSI)
+function resetToStart() {
+  // Reset semua input
+  document.getElementById('urlInput').value = '';
+  document.getElementById('titleInput').value = '';
+  document.getElementById('descInput').value = '';
+  document.getElementById('iconInput').value = '';
+  document.getElementById('iconUpload').value = '';
+  document.getElementById('colorInput').value = '#6366f1';
+  document.getElementById('bgInput').value = '#ffffff';
+  document.getElementById('displayInput').value = 'standalone';
+  document.getElementById('enableShortcuts').checked = false;
+  document.getElementById('enableShare').checked = false;
+  document.getElementById('enableOffline').checked = true;
+  document.getElementById('shortcutName1').value = '';
+  document.getElementById('shortcutUrl1').value = '';
+  document.getElementById('shortcutsContainer').classList.add('hidden');
+  
+  // Sembunyikan semua step
+  document.querySelectorAll('.wizard-step').forEach(step => {
+    step.classList.add('hidden');
+  });
+  
+  // Tampilkan step 1
+  currentStep = 1;
+  document.getElementById('step1').classList.remove('hidden');
+  
+  // Update UI
+  updateWizardUI();
+  updateMockup();
+  
+  // Scroll ke atas
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+  // Notifikasi
+  alert('✅ Aplikasi direset! Silakan mulai membuat PWA baru.');
+}
