@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>PWA Builder Ultimate</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -11,6 +12,9 @@
       theme: { extend: { colors: { primary: '#6366f1' } } }
     }
   </script>
+  <!-- Pustaka JSZip untuk Fitur Download ZIP -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
   <link rel="manifest" href="./manifest.json">
   <meta name="theme-color" content="#6366f1">
   <link rel="stylesheet" href="style.css">
@@ -28,12 +32,12 @@
   <div class="max-w-2xl mx-auto px-4 pt-4">
     <div class="flex justify-between mb-2 text-xs">
       <span id="step1-indicator" class="text-indigo-600 font-bold">1. URL</span>
-      <span id="step2-indicator">2. Desain</span>
-      <span id="step3-indicator">3. Lanjutan</span>
-      <span id="step4-indicator">4. Export</span>
+      <span id="step2-indicator" class="text-gray-500 dark:text-gray-400">2. Desain</span>
+      <span id="step3-indicator" class="text-gray-500 dark:text-gray-400">3. Lanjutan</span>
+      <span id="step4-indicator" class="text-gray-500 dark:text-gray-400">4. Export</span>
     </div>
     <div class="w-full bg-gray-200 rounded-full h-2">
-      <div id="progressBar" class="bg-indigo-600 h-2 rounded-full" style="width: 25%"></div>
+      <div id="progressBar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
     </div>
   </div>
 
@@ -42,93 +46,98 @@
     <!-- STEP 1 -->
     <section id="step1" class="wizard-step bg-white dark:bg-slate-800 rounded-2xl p-6 shadow mb-6">
       <h2 class="text-xl font-bold mb-4">🔗 Masukkan URL Website</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Masukkan URL PWA Anda untuk memulai proses konversi.</p>
       <div class="flex gap-2 mb-3">
-        <input id="urlInput" type="url" placeholder="https://example.com" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-700 rounded-lg">
-        <button onclick="analyzeUrl()" class="bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold">Cek</button>
+        <input id="urlInput" type="url" placeholder="https://example.com" class="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500">
+        <button onclick="analyzeUrl()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition">Cek</button>
       </div>
     </section>
 
     <!-- STEP 2 -->
     <section id="step2" class="wizard-step hidden bg-white dark:bg-slate-800 rounded-2xl p-6 shadow mb-6">
-      <h2 class="text-xl font-bold mb-4"> Desain</h2>
-      <input id="titleInput" placeholder="Nama Aplikasi" class="w-full mb-3 px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg">
-      <input type="file" id="iconUpload" accept="image/*" class="w-full mb-3" onchange="handleIconUpload(event)">
+      <h2 class="text-xl font-bold mb-4">🎨 Desain & Identitas</h2>
+      <label class="block text-sm font-medium mb-1">Nama Aplikasi</label>
+      <input id="titleInput" placeholder="Nama Aplikasi" class="w-full mb-3 px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg outline-none">
+      
+      <label class="block text-sm font-medium mb-1">Upload Ikon (PNG/JPG)</label>
+      <input type="file" id="iconUpload" accept="image/*" class="w-full mb-3 text-sm" onchange="handleIconUpload(event)">
       <input type="hidden" id="iconInput">
+      
       <div class="grid grid-cols-2 gap-3">
-        <input id="colorInput" type="color" class="h-12 rounded" oninput="updateMockup()">
-        <input id="bgInput" type="color" class="h-12 rounded" oninput="updateMockup()">
+        <div>
+          <label class="block text-xs mb-1">Theme Color</label>
+          <input id="colorInput" type="color" value="#6366f1" class="w-full h-12 rounded cursor-pointer" oninput="updateMockup()">
+        </div>
+        <div>
+          <label class="block text-xs mb-1">Background Color</label>
+          <input id="bgInput" type="color" value="#ffffff" class="w-full h-12 rounded cursor-pointer" oninput="updateMockup()">
+        </div>
       </div>
     </section>
 
     <!-- STEP 3 -->
     <section id="step3" class="wizard-step hidden bg-white dark:bg-slate-800 rounded-2xl p-6 shadow mb-6">
       <h2 class="text-xl font-bold mb-4">⚙️ Fitur Lanjutan</h2>
+      <label class="block text-sm font-medium mb-1">Display Mode</label>
       <select id="displayInput" class="w-full px-4 py-2 bg-gray-100 dark:bg-slate-700 rounded-lg mb-3">
-        <option value="standalone">Standalone</option>
+        <option value="standalone">Standalone (Seperti App Native)</option>
         <option value="fullscreen">Fullscreen</option>
       </select>
-      <label class="flex items-center gap-2 mb-3">
-        <input type="checkbox" id="enableShortcuts" onchange="toggleShortcuts()">
-        App Shortcuts
+      
+      <label class="flex items-center gap-2 mb-3 cursor-pointer">
+        <input type="checkbox" id="enableShortcuts" onchange="toggleShortcuts()" class="w-4 h-4 text-indigo-600 rounded">
+        Aktifkan App Shortcuts
       </label>
-      <div id="shortcutsContainer" class="hidden">
-        <input id="shortcutName1" placeholder="Nama Shortcut" class="w-full mb-2 px-3 py-2 bg-gray-100 dark:bg-slate-700 rounded">
-        <input id="shortcutUrl1" placeholder="URL" class="w-full px-3 py-2 bg-gray-100 dark:bg-slate-700 rounded">
+      <div id="shortcutsContainer" class="hidden space-y-2 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl">
+        <input id="shortcutName1" placeholder="Nama Shortcut (cth: Dashboard)" class="w-full px-3 py-2 bg-white dark:bg-slate-700 rounded border dark:border-slate-600">
+        <input id="shortcutUrl1" placeholder="URL Shortcut (cth: /dashboard)" class="w-full px-3 py-2 bg-white dark:bg-slate-700 rounded border dark:border-slate-600">
       </div>
     </section>
 
     <!-- STEP 4 -->
     <section id="step4" class="wizard-step hidden bg-white dark:bg-slate-800 rounded-2xl p-6 shadow mb-6">
-      <h2 class="text-xl font-bold mb-4"> Export & Download</h2>
+      <h2 class="text-xl font-bold mb-4">📦 Export & APK Builder</h2>
       
-      <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-xl mb-4 text-sm">
-        ✅ PWA Anda siap!
+      <div class="bg-green-50 dark:bg-green-900/30 p-4 rounded-xl mb-4 text-sm text-green-700 dark:text-green-300">
+        ✅ Konfigurasi PWA Anda sudah lengkap! Silakan download paket web atau cetak APK Android.
       </div>
 
-      <button onclick="generateUltimateZip()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold mb-3">
+      <button onclick="generateUltimateZip()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold mb-3 transition shadow">
         📦 Download Paket PWA (ZIP)
       </button>
 
-      <button onclick="copyUltimateSnippet()" class="w-full bg-gray-200 dark:bg-slate-700 py-3 rounded-xl font-semibold mb-6">
+      <button onclick="copyUltimateSnippet()" class="w-full bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 py-3 rounded-xl font-semibold mb-6 transition">
         📋 Copy Snippet HTML
       </button>
 
-      <!-- BATAS INI - TOMBAOL APK BARU -->
+      <!-- TOMBOL APK BUILDER -->
       <div class="mt-6 pt-6 border-t-2 border-dashed border-gray-300 dark:border-slate-600">
-        <h3 class="text-lg font-bold mb-2">🤖 Butuh File APK?</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Klik untuk cetak APK via Microsoft PWABuilder</p>
-        <button onclick="buildApk()" id="btnBuildApk" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg">
+        <h3 class="text-lg font-bold mb-1">🤖 Butuh File APK Android?</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Generate aplikasi Android langsung via PWABuilder engine.</p>
+        <button onclick="buildApk()" id="btnBuildApk" class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white py-4 rounded-xl font-bold shadow-lg transition transform active:scale-95">
           🚀 Cetak APK Sekarang
         </button>
       </div>
-      <!-- AKHIR TOMBAOL APK -->
     </section>
 
   </main>
 
   <!-- Navigation Buttons -->
-  <div class="fixed bottom-24 left-0 right-0 bg-white dark:bg-slate-800 border-t p-4">
+  <div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 p-4 z-40 shadow-lg">
     <div class="max-w-2xl mx-auto flex gap-3">
-      <button id="btnPrev" onclick="changeStep(-1)" class="flex-1 bg-gray-200 dark:bg-slate-700 py-3 rounded-xl font-semibold" disabled>Kembali</button>
-      <button id="btnNext" onclick="handleNextButton()" class="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-semibold">Lanjut</button>
+      <button id="btnPrev" onclick="changeStep(-1)" class="flex-1 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 py-3 rounded-xl font-semibold transition disabled:opacity-50" disabled>Kembali</button>
+      <button id="btnNext" onclick="changeStep(1)" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-semibold transition">Lanjut</button>
     </div>
   </div>
 
-  <!-- Loading -->
+  <!-- Loading Modal -->
   <div id="loading" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center">
+    <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center shadow-2xl">
       <div class="animate-spin rounded-full h-12 w-12 border-4 border-indigo-500 border-t-transparent mx-auto mb-4"></div>
-      <p id="loadingText">Memproses...</p>
+      <p id="loadingText" class="font-medium">Memproses...</p>
     </div>
   </div>
 
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js');
-      });
-    }
-  </script>
   <script src="app.js"></script>
 </body>
 </html>
