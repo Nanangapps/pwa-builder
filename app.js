@@ -559,7 +559,6 @@ function hideLoading() {
 }
 
 function showToast(message, type = 'success') {
-  // Hapus toast lama jika ada
   const oldToast = document.getElementById('toast-notification');
   if (oldToast) oldToast.remove();
   
@@ -579,7 +578,6 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// Tambahkan animasi CSS untuk toast
 if (!document.getElementById('toast-style')) {
   const style = document.createElement('style');
   style.id = 'toast-style';
@@ -591,7 +589,8 @@ if (!document.getElementById('toast-style')) {
   `;
   document.head.appendChild(style);
 }
-// Fungsi untuk handle tombol Next/Selesai
+
+// ============ FUNGSI NAVIGASI & RESET ============
 function handleNextButton() {
   if (currentStep === totalSteps) {
     resetToStart();
@@ -600,9 +599,7 @@ function handleNextButton() {
   }
 }
 
-// Fungsi Reset ke Awal (PASTI BERFUNGSI)
 function resetToStart() {
-  // Reset semua input
   document.getElementById('urlInput').value = '';
   document.getElementById('titleInput').value = '';
   document.getElementById('descInput').value = '';
@@ -618,94 +615,49 @@ function resetToStart() {
   document.getElementById('shortcutUrl1').value = '';
   document.getElementById('shortcutsContainer').classList.add('hidden');
   
-  // Sembunyikan semua step
-  document.querySelectorAll('.wizard-step').forEach(step => {
-    step.classList.add('hidden');
-  });
+  appConfig = {
+    url: '', title: 'My PWA App', description: 'Progressive Web App',
+    icon: '', themeColor: '#6366f1', bgColor: '#ffffff', display: 'standalone',
+    shortcuts: [], enableShare: false, enableOffline: true
+  };
   
-  // Tampilkan step 1
+  document.querySelectorAll('.wizard-step').forEach(step => step.classList.add('hidden'));
   currentStep = 1;
   document.getElementById('step1').classList.remove('hidden');
-  
-  // Update UI
   updateWizardUI();
   updateMockup();
-  
-  // Scroll ke atas
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  
-  // Notifikasi
-  alert('✅ Aplikasi direset! Silakan mulai membuat PWA baru.');
+  showToast('🔄 Aplikasi direset. Mulai dari awal!', 'success');
 }
-// ============ FUNGSI BUILD APK (INTEGRASI API) ============
-async function buildApk() {
-  // Pastikan user sudah punya URL
+
+// ============ FUNGSI BUILD APK ============
+function buildApk() {
   const url = document.getElementById('urlInput').value.trim();
   if (!url) {
     alert('⚠️ Masukkan URL website Anda di Step 1 terlebih dahulu!');
-    changeStep(1); // Kembali ke step 1
+    document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
+    document.getElementById('step1').classList.remove('hidden');
+    currentStep = 1;
+    updateWizardUI();
     return;
   }
 
-  const btn = document.getElementById('btnBuildApk');
-  const originalText = btn.innerHTML;
+  const confirmMsg = `🤖 Konfirmasi Build APK\n\nAplikasi akan mengarahkan Anda ke PWABuilder (Microsoft) dengan URL: \n\n${url}\n\nDi sana, Anda bisa mendownload file .APK atau .AAB secara gratis. Lanjutkan?`;
   
-  // Ubah tombol jadi loading
-  btn.disabled = true;
-  btn.innerHTML = '⏳ Sedang Memproses... (Bisa 1-2 menit)';
-  btn.classList.add('opacity-50', 'cursor-not-allowed');
+  if (confirm(confirmMsg)) {
+    const btn = document.getElementById('btnBuildApk');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Menghubungkan ke Server...';
+    btn.disabled = true;
 
-  try {
-    // Kita gunakan PWABuilder API (Milik Microsoft - Gratis & Terpercaya)
-    // API ini akan membuatkan package Android (APK/AAB)
-    const response = await fetch('https://www.pwabuilder.com/api/publish', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        url: url,
-        platform: 'android',
-        packageId: `com.pwabuilder.${url.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}`,
-        appVersion: '1.0.0',
-        appVersionCode: 1,
-        signingMode: 'new', // Buat tanda tangan digital baru
-        signing: {
-          file: null,
-          alias: 'my-key',
-          fullName: 'PWA Builder User',
-          organization: 'PWA Builder',
-          organizationalUnit: 'Development',
-          countryCode: 'ID'
-        }
-      })
-    });
-
-    if (!response.ok) throw new Error('Gagal menghubungi server APK');
-    
-    const data = await response.json();
-    
-    // Jika berhasil, biasanya API mengembalikan link download atau status
-    // Karena PWABuilder API kompleks, kita akan arahkan user ke halaman hasil mereka
-    // dengan URL yang sudah terisi otomatis (Cara paling stabil & gratis)
-    
-    const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
-    
-    // Buka di tab baru
-    window.open(pwabuilderUrl, '_blank');
-    
-    alert('✅ Perintah dikirim!\n\nAnda akan diarahkan ke PWABuilder (Microsoft) untuk mendownload file APK/AAB Anda. Silakan ikuti langkah "Package" di sana.');
-
-  } catch (error) {
-    console.error(error);
-    // Fallback jika API error
-    const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
-    window.open(pwabuilderUrl, '_blank');
-    alert('⚠️ Menggunakan metode cadangan. Silakan download APK di halaman yang terbuka.');
-  } finally {
-    // Kembalikan tombol seperti semula
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+    setTimeout(() => {
+      const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
+      window.open(pwabuilderUrl, '_blank');
+      
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      alert('✅ Sukses! Halaman PWABuilder telah dibuka.\n\nSilakan klik tombol "Package" -> "Android" di halaman tersebut untuk mendownload APK Anda.');
+    }, 1500);
   }
 }
+
