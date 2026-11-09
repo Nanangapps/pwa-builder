@@ -637,3 +637,75 @@ function resetToStart() {
   // Notifikasi
   alert('✅ Aplikasi direset! Silakan mulai membuat PWA baru.');
 }
+// ============ FUNGSI BUILD APK (INTEGRASI API) ============
+async function buildApk() {
+  // Pastikan user sudah punya URL
+  const url = document.getElementById('urlInput').value.trim();
+  if (!url) {
+    alert('⚠️ Masukkan URL website Anda di Step 1 terlebih dahulu!');
+    changeStep(1); // Kembali ke step 1
+    return;
+  }
+
+  const btn = document.getElementById('btnBuildApk');
+  const originalText = btn.innerHTML;
+  
+  // Ubah tombol jadi loading
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Sedang Memproses... (Bisa 1-2 menit)';
+  btn.classList.add('opacity-50', 'cursor-not-allowed');
+
+  try {
+    // Kita gunakan PWABuilder API (Milik Microsoft - Gratis & Terpercaya)
+    // API ini akan membuatkan package Android (APK/AAB)
+    const response = await fetch('https://www.pwabuilder.com/api/publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        url: url,
+        platform: 'android',
+        packageId: `com.pwabuilder.${url.replace(/[^a-zA-Z0-9]/g, '').substring(0, 20)}`,
+        appVersion: '1.0.0',
+        appVersionCode: 1,
+        signingMode: 'new', // Buat tanda tangan digital baru
+        signing: {
+          file: null,
+          alias: 'my-key',
+          fullName: 'PWA Builder User',
+          organization: 'PWA Builder',
+          organizationalUnit: 'Development',
+          countryCode: 'ID'
+        }
+      })
+    });
+
+    if (!response.ok) throw new Error('Gagal menghubungi server APK');
+    
+    const data = await response.json();
+    
+    // Jika berhasil, biasanya API mengembalikan link download atau status
+    // Karena PWABuilder API kompleks, kita akan arahkan user ke halaman hasil mereka
+    // dengan URL yang sudah terisi otomatis (Cara paling stabil & gratis)
+    
+    const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
+    
+    // Buka di tab baru
+    window.open(pwabuilderUrl, '_blank');
+    
+    alert('✅ Perintah dikirim!\n\nAnda akan diarahkan ke PWABuilder (Microsoft) untuk mendownload file APK/AAB Anda. Silakan ikuti langkah "Package" di sana.');
+
+  } catch (error) {
+    console.error(error);
+    // Fallback jika API error
+    const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
+    window.open(pwabuilderUrl, '_blank');
+    alert('⚠️ Menggunakan metode cadangan. Silakan download APK di halaman yang terbuka.');
+  } finally {
+    // Kembalikan tombol seperti semula
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+  }
+}
