@@ -21,7 +21,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.classList.add('dark');
   }
   updateWizardUI();
-  updateMockup();
 });
 
 // ============ DARK MODE ============
@@ -49,37 +48,37 @@ function updateWizardUI() {
   
   for (let i = 1; i <= totalSteps; i++) {
     const indicator = document.getElementById(`step${i}-indicator`);
-    if (indicator) {
-      if (i === currentStep) {
-        indicator.classList.add('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
-        indicator.classList.remove('text-gray-500', 'dark:text-gray-400');
-      } else {
-        indicator.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
-        indicator.classList.add('text-gray-500', 'dark:text-gray-400');
-      }
+    if (i === currentStep) {
+      indicator.classList.add('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
+      indicator.classList.remove('text-gray-500', 'dark:text-gray-400');
+    } else {
+      indicator.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'font-bold');
+      indicator.classList.add('text-gray-500', 'dark:text-gray-400');
     }
   }
   
-  const btnPrev = document.getElementById('btnPrev');
-  if (btnPrev) btnPrev.disabled = currentStep === 1;
+  document.getElementById('btnPrev').disabled = currentStep === 1;
   
-  const btnNext = document.getElementById('btnNext');
-  if (btnNext) {
-    if (currentStep === totalSteps) {
-      btnNext.textContent = 'Selesai';
-      btnNext.onclick = resetToStart;
-    } else {
-      btnNext.textContent = 'Lanjut';
-      btnNext.onclick = () => changeStep(1);
-    }
+  if (currentStep === totalSteps) {
+    document.getElementById('btnNext').textContent = 'Selesai';
+    document.getElementById('btnNext').onclick = resetToStart;
+  } else {
+    document.getElementById('btnNext').textContent = 'Lanjut';
+    document.getElementById('btnNext').onclick = () => changeStep(1);
   }
 }
 
-// ============ FUNGSI RESET ============
+function handleNextButton() {
+  if (currentStep === totalSteps) {
+    resetToStart();
+  } else {
+    changeStep(1);
+  }
+}
+
 function resetToStart() {
   document.getElementById('urlInput').value = '';
   document.getElementById('titleInput').value = '';
-  document.getElementById('descInput').value = '';
   document.getElementById('iconInput').value = '';
   document.getElementById('iconUpload').value = '';
   document.getElementById('colorInput').value = '#6366f1';
@@ -109,9 +108,7 @@ function resetToStart() {
   currentStep = 1;
   document.getElementById('step1').classList.remove('hidden');
   updateWizardUI();
-  updateMockup();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-  
   showToast('🔄 Aplikasi direset. Mulai dari awal!', 'success');
 }
 
@@ -136,17 +133,26 @@ async function analyzeUrl() {
     
     for (const proxyUrl of proxies) {
       try {
-        const res = await fetch(proxyUrl, { method: 'GET', headers: { 'Accept': 'text/html' } });
+        const res = await fetch(proxyUrl, { 
+          method: 'GET',
+          headers: { 'Accept': 'text/html' }
+        });
         if (res.ok) {
           html = await res.text();
-          if (html && html.length > 100) { success = true; break; }
+          if (html && html.length > 100) {
+            success = true;
+            break;
+          }
         }
       } catch (e) {
+        console.log('Proxy gagal:', proxyUrl, e.message);
         continue;
       }
     }
     
-    if (!success || !html) throw new Error('Semua proxy gagal');
+    if (!success || !html) {
+      throw new Error('Semua proxy gagal');
+    }
     
     const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
     const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["'](.*?)["']/i) 
@@ -163,13 +169,16 @@ async function analyzeUrl() {
     
     if (descMatch && descMatch[1]) { 
       appConfig.description = descMatch[1].trim(); 
-      document.getElementById('descInput').value = appConfig.description; 
     }
     
     if (iconMatch) {
       let iconUrl = iconMatch[1] || iconMatch[2];
       if (iconUrl && !iconUrl.startsWith('http') && !iconUrl.startsWith('data:')) {
-        try { iconUrl = new URL(iconUrl, url).href; } catch (e) { iconUrl = ''; }
+        try {
+          iconUrl = new URL(iconUrl, url).href;
+        } catch (e) {
+          iconUrl = '';
+        }
       }
       if (iconUrl) {
         appConfig.icon = iconUrl;
@@ -221,8 +230,15 @@ async function handleIconUpload(event) {
       hideLoading();
       showToast('✅ Ikon berhasil diupload!', 'success');
     };
-    img.onerror = () => { hideLoading(); alert('Gagal memproses gambar.'); };
+    img.onerror = () => {
+      hideLoading();
+      alert('Gagal memproses gambar. Coba gambar lain.');
+    };
     img.src = e.target.result;
+  };
+  reader.onerror = () => {
+    hideLoading();
+    alert('Gagal membaca file.');
   };
   reader.readAsDataURL(file);
 }
@@ -231,14 +247,18 @@ async function getDominantColor(img) {
   try {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    canvas.width = 50; canvas.height = 50;
+    canvas.width = 50; 
+    canvas.height = 50;
     ctx.drawImage(img, 0, 0, 50, 50);
     const data = ctx.getImageData(0, 0, 50, 50).data;
     
     let r = 0, g = 0, b = 0, count = 0;
     for (let i = 0; i < data.length; i += 4) {
       if (data[i+3] > 125 && !(data[i]>240 && data[i+1]>240 && data[i+2]>240) && !(data[i]<15 && data[i+1]<15 && data[i+2]<15)) {
-        r += data[i]; g += data[i+1]; b += data[i+2]; count++;
+        r += data[i]; 
+        g += data[i+1]; 
+        b += data[i+2]; 
+        count++;
       }
     }
     if (count === 0) return '#6366f1';
@@ -252,22 +272,10 @@ function rgbToHex(r, g, b) {
   return "#" + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1).padStart(6, '0');
 }
 
-// ============ MOCKUP PREVIEW ============
 function updateMockup() {
   appConfig.title = document.getElementById('titleInput').value || 'App Name';
   appConfig.themeColor = document.getElementById('colorInput').value;
   appConfig.bgColor = document.getElementById('bgInput').value;
-  
-  const iconUrl = document.getElementById('iconInput').value || 'https://via.placeholder.com/192';
-  
-  const titleEl = document.getElementById('mockupTitle');
-  if (titleEl) titleEl.textContent = appConfig.title;
-  const headerEl = document.getElementById('mockupHeader');
-  if (headerEl) headerEl.style.backgroundColor = appConfig.themeColor;
-  const screenEl = document.getElementById('mockupScreen');
-  if (screenEl) screenEl.style.backgroundColor = appConfig.bgColor;
-  const iconEl = document.getElementById('mockupIcon');
-  if (iconEl) iconEl.style.backgroundImage = `url(${iconUrl})`;
 }
 
 function toggleShortcuts() {
@@ -296,7 +304,7 @@ async function generateUltimateZip() {
       description: appConfig.description, 
       start_url: appConfig.url || '/',
       scope: appConfig.url || '/', 
-      display: document.getElementById('displayInput').value || 'standalone',
+      display: appConfig.display,
       orientation: 'portrait', 
       background_color: appConfig.bgColor,
       theme_color: appConfig.themeColor,
@@ -320,8 +328,7 @@ async function generateUltimateZip() {
       }
     }
 
-    const enableShareEl = document.getElementById('enableShare');
-    if (enableShareEl && enableShareEl.checked) {
+    if (document.getElementById('enableShare').checked) {
       manifest.share_target = { 
         action: '/share-receiver', 
         method: 'GET', 
@@ -342,8 +349,7 @@ self.addEventListener('fetch', e => {
 });`;
     zip.file('service-worker.js', swCode);
 
-    const offlineEnable = document.getElementById('enableOffline');
-    if (!offlineEnable || offlineEnable.checked) {
+    if (document.getElementById('enableOffline').checked) {
       const offlineHtml = `<!DOCTYPE html>
 <html>
 <head>
@@ -364,13 +370,21 @@ self.addEventListener('fetch', e => {
       zip.file('offline.html', offlineHtml);
     }
 
-    const readme = `PWA ULTIMATE PACKAGE\n====================\nCara Pakai:\n1. Upload folder 'icons', 'manifest.json', 'service-worker.js', 'offline.html' ke root hosting Anda.\n2. Copy snippet HTML ke bagian <head> website Anda.\n3. Pastikan hosting menggunakan HTTPS.\n4. Buka website di Chrome, klik menu (titik tiga), pilih "Install App" atau "Tambahkan ke Layar Utama".\n\nDibuat dengan PWA Builder Ultimate 🚀`;
+    const readme = `PWA ULTIMATE PACKAGE
+====================
+Cara Pakai:
+1. Upload folder 'icons', 'manifest.json', 'service-worker.js', 'offline.html' ke root hosting Anda.
+2. Copy snippet HTML ke bagian <head> website Anda.
+3. Pastikan hosting menggunakan HTTPS.
+4. Buka website di Chrome, klik menu (titik tiga), pilih "Install App" atau "Tambahkan ke Layar Utama".
+
+Dibuat dengan PWA Builder Ultimate 🚀`;
     zip.file('README.txt', readme);
 
     const content = await zip.generateAsync({ type: 'blob' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(content);
-    link.download = `${appConfig.title.replace(/\s/g, '_')}_PWA.zip`;
+    link.download = `${appConfig.title.replace(/\s/g, '_')}_Ultimate_PWA.zip`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -451,11 +465,43 @@ async function copyUltimateSnippet() {
   }
 }
 
+// ============ BUILD APK ============
+function buildApk() {
+  const url = document.getElementById('urlInput').value.trim();
+  
+  if (!url) {
+    alert('⚠️ Masukkan URL website Anda di Step 1 terlebih dahulu sebelum mencetak APK.');
+    document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
+    document.getElementById('step1').classList.remove('hidden');
+    currentStep = 1;
+    updateWizardUI();
+    return;
+  }
+
+  const confirmMsg = `🤖 Konfirmasi Build APK\n\nAplikasi akan mengarahkan Anda ke PWABuilder (Microsoft) dengan URL: \n\n${url}\n\nDi sana, Anda bisa mendownload file .APK atau .AAB secara gratis. Lanjutkan?`;
+  
+  if (confirm(confirmMsg)) {
+    const btn = document.getElementById('btnBuildApk');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Menghubungkan ke Server...';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
+      window.open(pwabuilderUrl, '_blank');
+      
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+      alert('✅ Sukses! Halaman PWABuilder telah dibuka.\n\nSilakan klik tombol "Package" -> "Android" di halaman tersebut untuk mendownload APK Anda.');
+    }, 1500);
+  }
+}
+
 // ============ IMPORT / EXPORT PROJECT ============
 function exportProject() {
   appConfig.url = document.getElementById('urlInput').value;
   appConfig.title = document.getElementById('titleInput').value || 'My PWA App';
-  appConfig.description = document.getElementById('descInput').value || 'Progressive Web App';
+  appConfig.description = document.getElementById('descInput')?.value || 'Progressive Web App';
   appConfig.icon = document.getElementById('iconInput').value;
   appConfig.themeColor = document.getElementById('colorInput').value;
   appConfig.bgColor = document.getElementById('bgInput').value;
@@ -482,7 +528,6 @@ function importProject(event) {
       
       document.getElementById('urlInput').value = appConfig.url || '';
       document.getElementById('titleInput').value = appConfig.title || '';
-      document.getElementById('descInput').value = appConfig.description || '';
       document.getElementById('iconInput').value = appConfig.icon || '';
       document.getElementById('colorInput').value = appConfig.themeColor || '#6366f1';
       document.getElementById('bgInput').value = appConfig.bgColor || '#ffffff';
@@ -528,41 +573,14 @@ function showToast(message, type = 'success') {
   }, 3000);
 }
 
-// ============ NAVIGASI & HANDLE NEXT ============
-function handleNextButton() {
-  if (currentStep === totalSteps) {
-    resetToStart();
-  } else {
-    changeStep(1);
-  }
-}
-
-// ============ BUILD APK ============
-function buildApk() {
-  const url = document.getElementById('urlInput').value.trim() || appConfig.url;
-  if (!url) {
-    alert('⚠️ Masukkan URL website Anda di Step 1 terlebih dahulu!');
-    document.querySelectorAll('.wizard-step').forEach(s => s.classList.add('hidden'));
-    document.getElementById('step1').classList.remove('hidden');
-    currentStep = 1;
-    updateWizardUI();
-    return;
-  }
-
-  const confirmMsg = `🤖 Konfirmasi Build APK\n\nAplikasi akan mengarahkan Anda ke PWABuilder dengan URL: \n\n${url}\n\nLanjutkan?`;
-  
-  if (confirm(confirmMsg)) {
-    const btn = document.getElementById('btnBuildApk');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ Menghubungkan...';
-    btn.disabled = true;
-
-    setTimeout(() => {
-      const pwabuilderUrl = `https://www.pwabuilder.com/?url=${encodeURIComponent(url)}`;
-      window.open(pwabuilderUrl, '_blank');
-      
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }, 1500);
-  }
+if (!document.getElementById('toast-style')) {
+  const style = document.createElement('style');
+  style.id = 'toast-style';
+  style.textContent = `
+    @keyframes slideUp {
+      from { transform: translate(-50%, 100px); opacity: 0; }
+      to { transform: translate(-50%, 0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
 }
